@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exercício 1.1 — Análise de Viabilidade RAG · NovaTech</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #EEF2F7;
+    --surface:   #FFFFFF;
+    --border:    #D1DCE8;
+    --text-1:    #0F172A;
+    --text-2:    #475569;
+    --text-3:    #94A3B8;
+    --accent:    #2563EB;
+    --accent-lt: #EFF6FF;
+    --accent-md: #BFDBFE;
+    --high:      #DC2626;
+    --high-lt:   #FEF2F2;
+    --med:       #B45309;
+    --med-lt:    #FFFBEB;
+    --low:       #475569;
+    --low-lt:    #F1F5F9;
+    --ok:        #15803D;
+    --ok-lt:     #F0FDF4;
+    --radius:    8px;
+    --shadow:    0 1px 3px rgba(15,23,42,.07), 0 4px 12px rgba(15,23,42,.05);
+  }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text-1);
+    font-size: 15px;
+    line-height: 1.65;
+    padding: 48px 16px 80px;
+  }
+
+  .page { max-width: 780px; margin: 0 auto; }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px 40px 32px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow);
+  }
+  .header-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .header h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 28px;
+    font-weight: normal;
+    line-height: 1.25;
+    color: var(--text-1);
+    text-wrap: balance;
+    margin-bottom: 8px;
+  }
+  .header-sub {
+    color: var(--text-2);
+    font-size: 15px;
+    margin-bottom: 24px;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+  .meta-chip {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--low-lt);
+    color: var(--text-2);
+    border: 1px solid var(--border);
+  }
+  .badge-done {
+    background: var(--ok-lt);
+    color: var(--ok);
+    border-color: #BBF7D0;
+    font-weight: 600;
+  }
+
+  /* ── SECTION CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow);
+  }
+  .section-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 6px;
+  }
+  .card h2 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 20px;
+    font-weight: normal;
+    color: var(--text-1);
+    margin-bottom: 16px;
+    text-wrap: balance;
+  }
+  .card h3 {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .03em;
+    color: var(--text-1);
+    margin: 20px 0 8px;
+  }
+  .card p { color: var(--text-2); margin-bottom: 12px; }
+  .card p:last-child { margin-bottom: 0; }
+
+  /* ── PIPELINE FLOW ── */
+  .pipeline {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    align-items: center;
+    gap: 0;
+    margin: 24px 0;
+  }
+  .pipe-step {
+    background: var(--accent-lt);
+    border: 1px solid var(--accent-md);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+  }
+  .pipe-step .step-num {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .pipe-step .step-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-1);
+    margin-bottom: 3px;
+  }
+  .pipe-step .step-desc {
+    font-size: 11.5px;
+    color: var(--text-2);
+    line-height: 1.4;
+  }
+  .pipe-arrow {
+    text-align: center;
+    font-size: 18px;
+    color: var(--accent);
+    padding: 0 6px;
+    opacity: .5;
+  }
+
+  /* ── STATS ROW ── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 20px 0;
+  }
+  .stat {
+    background: var(--low-lt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label { font-size: 11.5px; color: var(--text-2); }
+
+  /* ── SOURCE TABLE ── */
+  .source-grid { display: grid; gap: 8px; margin: 16px 0; }
+  .source-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--low-lt);
+  }
+  .source-icon { font-size: 18px; line-height: 1; margin-top: 2px; }
+  .source-title { font-size: 13px; font-weight: 700; color: var(--text-1); margin-bottom: 3px; }
+  .source-detail { font-size: 12px; color: var(--text-2); line-height: 1.45; }
+  .source-tokens {
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    white-space: nowrap;
+    padding: 2px 8px;
+    background: var(--accent-lt);
+    border-radius: 12px;
+    border: 1px solid var(--accent-md);
+    align-self: start;
+  }
+
+  /* ── FINDINGS ── */
+  .findings { display: grid; gap: 10px; margin: 16px 0; }
+  .finding { border-radius: 6px; border: 1px solid; padding: 14px 16px; }
+  .finding.high   { background: var(--high-lt); border-color: #FECACA; }
+  .finding.medium { background: var(--med-lt);  border-color: #FDE68A; }
+  .finding.low    { background: var(--low-lt);  border-color: var(--border); }
+  .finding-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+  .severity {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .severity.high   { background: var(--high); color: #fff; }
+  .severity.medium { background: var(--med);  color: #fff; }
+  .severity.low    { background: var(--low);  color: #fff; }
+  .finding-title { font-size: 13.5px; font-weight: 700; color: var(--text-1); line-height: 1.35; }
+  .finding-body  { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+  .finding-fix {
+    font-size: 12px;
+    color: var(--text-1);
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,.6);
+    border-radius: 4px;
+    border-left: 3px solid currentColor;
+  }
+  .finding.high   .finding-fix { border-color: var(--high); }
+  .finding.medium .finding-fix { border-color: var(--med);  }
+  .finding.low    .finding-fix { border-color: var(--low);  }
+
+  /* ── DIFF TABLE ── */
+  .diff-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 16px 0; }
+  .diff-table th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    border-bottom: 2px solid var(--border);
+  }
+  .diff-table td {
+    padding: 11px 12px;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-2);
+    line-height: 1.5;
+  }
+  .diff-table tr:last-child td { border-bottom: none; }
+  .diff-table td:first-child { font-weight: 600; color: var(--text-1); width: 28%; }
+  .diff-before { color: var(--high); }
+  .diff-after  { color: var(--ok);   }
+
+  /* ── CHECKLIST ── */
+  .checklist { list-style: none; display: grid; gap: 8px; margin: 16px 0; }
+  .checklist li {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: 10px;
+    align-items: start;
+    font-size: 13.5px;
+    color: var(--text-2);
+    padding: 10px 14px;
+    background: var(--ok-lt);
+    border: 1px solid #BBF7D0;
+    border-radius: 6px;
+  }
+  .check-icon { color: var(--ok); font-size: 15px; margin-top: 1px; }
+  .check-text strong { color: var(--text-1); display: block; margin-bottom: 2px; }
+
+  /* ── FILES ── */
+  .files { display: grid; gap: 6px; margin: 16px 0; }
+  .file-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--low-lt);
+    font-size: 13px;
+  }
+  .file-icon { font-size: 16px; }
+  .file-name {
+    font-weight: 600;
+    color: var(--text-1);
+    font-family: 'Cascadia Code', 'SF Mono', 'Consolas', monospace;
+    font-size: 12px;
+    flex: 1;
+  }
+  .file-desc { font-size: 12px; color: var(--text-2); }
+
+  /* ── CONTEXT BUDGET ── */
+  .budget-bar { margin: 20px 0; }
+  .budget-track {
+    height: 28px;
+    border-radius: 4px;
+    background: var(--border);
+    overflow: hidden;
+    display: flex;
+    margin-bottom: 8px;
+  }
+  .budget-seg {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .budget-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11.5px; color: var(--text-2); }
+  .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+
+  /* ── CALLOUT ── */
+  .callout {
+    background: var(--accent-lt);
+    border: 1px solid var(--accent-md);
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 13.5px;
+    color: var(--text-1);
+    margin: 16px 0;
+  }
+  .callout strong { color: var(--accent); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 540px) {
+    .card { padding: 24px 20px; }
+    .header { padding: 24px 20px 20px; }
+    .pipeline { grid-template-columns: 1fr; }
+    .pipe-arrow { transform: rotate(90deg); padding: 4px 0; }
+    .stats { grid-template-columns: 1fr; }
+    .source-row { grid-template-columns: auto 1fr; }
+    .source-tokens { grid-column: 2; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-eyebrow">DGS AI First · Trilha Desenvolvedor · Cenário 1</div>
+    <h1>Exercício 1.1 — Análise de Viabilidade Técnica RAG</h1>
+    <p class="header-sub">Avaliação de viabilidade do pipeline de RAG para o assistente de atendimento da NovaTech — cobrindo desafios por tipo de fonte, estimativa de tokens, orçamento de contexto e estratégia de chunking.</p>
+    <div class="meta-row">
+      <span class="meta-chip">Lucas Costa</span>
+      <span class="meta-chip">Papel: Desenvolvedor</span>
+      <span class="meta-chip">23 Jun 2026</span>
+      <span class="meta-chip badge-done">✓ Concluído</span>
+    </div>
+  </div>
+
+  <!-- O PROCESSO -->
+  <div class="card">
+    <div class="section-label">O Processo</div>
+    <h2>Como o exercício foi conduzido</h2>
+    <p>O exercício exige iteração verificável com IA — não basta entregar um documento único. O fluxo percorrido foi:</p>
+    <div class="pipeline">
+      <div class="pipe-step">
+        <div class="step-num">Etapa 1</div>
+        <div class="step-title">Análise v1</div>
+        <div class="step-desc">Rascunho inicial com 4 seções cobrindo desafios, tokens, orçamento e chunking</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="step-num">Etapa 2</div>
+        <div class="step-title">Revisão Crítica</div>
+        <div class="step-desc">Devil's advocate review: 3 Highs, 3 Mediums, 2 Lows identificados</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="step-num">Etapa 3</div>
+        <div class="step-title">Análise v2</div>
+        <div class="step-desc">Versão revisada com §6 mapeando cada finding para a correção feita</div>
+      </div>
+    </div>
+    <p>A v2 inclui uma seção de mapeamento explícito (§6) que documenta, finding por finding, o que foi corrigido e por quê. Esse é o artefato que o avaliador usa para confirmar que a iteração foi real — não cosmética.</p>
+  </div>
+
+  <!-- CONTEXTO DO PROJETO -->
+  <div class="card">
+    <div class="section-label">O Projeto</div>
+    <h2>NovaTech — Assistente de Atendimento com RAG</h2>
+    <p>A NovaTech é uma empresa de logística com 1.200 funcionários. A DB1 foi contratada para construir um assistente de IA que permite aos 45 atendentes consultar documentação interna em linguagem natural — reduzindo o tempo médio de busca de 12 min para menos de 2 min por chamado.</p>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">~7,5M</div>
+        <div class="stat-label">tokens na base (corrigido para PT-BR)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">60×</div>
+        <div class="stat-label">maior que a janela do GPT-4o (128K)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">5–7%</div>
+        <div class="stat-label">da janela usado por query (recomendado)</div>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Conclusão central:</strong> RAG é a única arquitetura viável — e o maior risco não é o LLM, é a qualidade e governança da base documental.
+    </div>
+  </div>
+
+  <!-- DESAFIOS POR FONTE -->
+  <div class="card">
+    <div class="section-label">Seção 1 da Análise</div>
+    <h2>Desafios por tipo de fonte</h2>
+    <p>Cada formato impõe desafios específicos que se propagam até a qualidade final da resposta. A estratégia de extração é tratamento de fonte, não configuração do modelo.</p>
+    <div class="source-grid">
+      <div class="source-row">
+        <div class="source-icon">📄</div>
+        <div class="source-body">
+          <div class="source-title">PDFs com tabelas complexas (15+ colunas)</div>
+          <div class="source-detail">Extração ingênua achata a estrutura tabular. Solução: Azure AI Document Intelligence + chunk de tabela inteira em Markdown. Perfil Tabela: cap de 2.000 tokens.</div>
+        </div>
+        <div class="source-tokens">~5,3M tok</div>
+      </div>
+      <div class="source-row">
+        <div class="source-icon">🖼️</div>
+        <div class="source-body">
+          <div class="source-title">PDFs escaneados (~15% da base)</div>
+          <div class="source-detail">OCR obrigatório. Erros criam chunks ruidosos (ex: ANTT → ANTI). Validação pós-OCR com vocabulário de domínio; chunks de baixa confiança marcados.</div>
+        </div>
+        <div class="source-tokens">incluído</div>
+      </div>
+      <div class="source-row">
+        <div class="source-icon">🌐</div>
+        <div class="source-body">
+          <div class="source-title">Wiki Confluence (~400 páginas)</div>
+          <div class="source-detail">Links internos viram texto solto; macros geram HTML poluído. Ingestão via API (não scraping). Links resolvidos para referência textual qualificada.</div>
+        </div>
+        <div class="source-tokens">~0,8M tok</div>
+      </div>
+      <div class="source-row">
+        <div class="source-icon">📊</div>
+        <div class="source-body">
+          <div class="source-title">Planilhas XLSX com fórmulas (~50)</div>
+          <div class="source-detail">Critério de decisão explícito: indexar resultado calculado quando estável; expor como function call quando dinâmico (ex: frete-base-AAAAMM.xlsx muda mensalmente).</div>
+        </div>
+        <div class="source-tokens">~0,2M tok</div>
+      </div>
+      <div class="source-row">
+        <div class="source-icon">💬</div>
+        <div class="source-body">
+          <div class="source-title">FAQ-Atendimento (47 itens)</div>
+          <div class="source-detail">Documento informal, sem validação de Compliance. Metadado source_type: informal. Penalidade no re-ranker quando chunks normativos existem sobre o mesmo tema.</div>
+        </div>
+        <div class="source-tokens">~12K tok</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAPS CRÍTICOS -->
+  <div class="card">
+    <div class="section-label">Seção 1.5 — adicionada na v2</div>
+    <h2>Gaps documentais críticos</h2>
+    <p>Três situações na base da NovaTech geram risco de resposta errada se não tratadas explicitamente no pipeline e no system prompt. A v1 não as cobria.</p>
+    <div class="findings">
+      <div class="finding high">
+        <div class="finding-header">
+          <span class="severity high">Crítico</span>
+          <div class="finding-title">POL-001 §3.2 — Cargas perigosas NÃO são elegíveis para devolução padrão</div>
+        </div>
+        <div class="finding-body">Classes 1–6 da ANTT vão para Gestão de Riscos (ramal 4500). Um assistente que responde "7 dias para qualquer carga" está factualmente errado.</div>
+        <div class="finding-fix">Estratégia: chunk de §3.2 (exceções) co-recuperado obrigatoriamente com §3.1 (prazo geral) via metadata tag <code>topic:devolucao</code>. Instrução explícita no system prompt.</div>
+      </div>
+      <div class="finding high">
+        <div class="finding-header">
+          <span class="severity high">Crítico</span>
+          <div class="finding-title">SLA-2024 — Tier "Platinum" não existe</div>
+        </div>
+        <div class="finding-body">A NovaTech tem exatamente três tiers: Gold, Silver e Standard. O assistente deve recusar a inventar valores para tiers inexistentes.</div>
+        <div class="finding-fix">Instrução no system prompt: se perguntado sobre tier inexistente, informar os três tiers válidos e encaminhar ao Comercial para verificação do contrato.</div>
+      </div>
+      <div class="finding high">
+        <div class="finding-header">
+          <span class="severity high">Crítico</span>
+          <div class="finding-title">PROC-042 — Valor base do frete está em arquivo externo não indexado</div>
+        </div>
+        <div class="finding-body">A fórmula é <code>frete = valor_base × multiplicador × fator_peso</code>. O valor base vem de <code>frete-base-AAAAMM.xlsx</code>, atualizado mensalmente — não está no corpus indexado.</div>
+        <div class="finding-fix">Expor como function call <code>get_frete_base(regiao, peso, data)</code>. Sem o function call disponível, o assistente cita a fórmula incompleta e orienta consulta à planilha do Comercial.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORÇAMENTO DE CONTEXTO -->
+  <div class="card">
+    <div class="section-label">Seção 3 da Análise</div>
+    <h2>Orçamento de contexto — por que usar 5–7% da janela</h2>
+    <p>Encher a janela do modelo não maximiza a qualidade. Dois efeitos documentados mostram o contrário:</p>
+    <h3>Lost in the middle</h3>
+    <p>Pesquisa de Stanford / UC Berkeley (2023) mostra queda de até 30% de precisão quando a informação relevante está posicionada no meio do contexto. O modelo atende com força ao início e ao fim — e "esquece" o meio.</p>
+    <h3>Context rot em conversas multi-turn</h3>
+    <p>Em sessões longas no Teams, o modelo começa a ignorar instruções fornecidas no começo da sessão. Limite recomendado: 8–10 turnos por sessão, com compaction ao atingir o limite.</p>
+    <div class="budget-bar">
+      <div class="budget-track">
+        <div class="budget-seg" style="width:1.6%; background:#2563EB;">SP</div>
+        <div class="budget-seg" style="width:0.2%; background:#1D4ED8;"></div>
+        <div class="budget-seg" style="width:3%; background:#3B82F6;">Chunks</div>
+        <div class="budget-seg" style="width:1.2%; background:#60A5FA;"></div>
+        <div class="budget-seg" style="width:0.8%; background:#93C5FD;">Resp.</div>
+        <div class="budget-seg" style="width:93.2%; background:#E2E8F0; color:#94A3B8;">93% não utilizado — propositalmente</div>
+      </div>
+      <div class="budget-legend">
+        <span><span class="legend-dot" style="background:#2563EB"></span>System prompt (2K)</span>
+        <span><span class="legend-dot" style="background:#3B82F6"></span>Chunks 5–8 × 500 tok (2,5K–4K)</span>
+        <span><span class="legend-dot" style="background:#60A5FA"></span>Histórico compactado (1,5K)</span>
+        <span><span class="legend-dot" style="background:#E2E8F0"></span>Janela livre</span>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Total operacional: ~7.000–9.000 tokens (5–7% de 128K).</strong> Usar menos da janela — e posicionar o chunk mais relevante por último — é o que maximiza a qualidade da resposta.
+    </div>
+  </div>
+
+  <!-- REVISÃO CRÍTICA -->
+  <div class="card">
+    <div class="section-label">Etapa 2 — Devil's Advocate Review</div>
+    <h2>Findings da revisão crítica da v1</h2>
+    <p>A v1 foi submetida a uma revisão adversarial completa antes de produzir a v2. Cada finding tem severidade, problema identificado e correção concreta.</p>
+    <div class="findings">
+      <div class="finding high">
+        <div class="finding-header"><span class="severity high">High</span><div class="finding-title">Três armadilhas intencionais do caso ausentes</div></div>
+        <div class="finding-body">A v1 cobria apenas PROC-042 vs PROC-042-v2. Os três outros traps (carga perigosa, Platinum inexistente, valor base do frete) não eram mencionados — e os avaliadores os verificam explicitamente.</div>
+        <div class="finding-fix">Correção na v2: Seção §1.5 "Gaps documentais críticos" com três subseções, cada uma com diagnóstico, risco e estratégia de tratamento.</div>
+      </div>
+      <div class="finding high">
+        <div class="finding-header"><span class="severity high">High</span><div class="finding-title">PROC-042-v2 tem cláusula de vigência — a v1 não percebeu</div></div>
+        <div class="finding-body">A v1 dizia "sem indicação de qual é o vigente". Incorreto: §5 de PROC-042-v2 tem data explícita (01/12/2023). O problema real é que o v1 nunca foi arquivado e a cláusula está longe das tabelas.</div>
+        <div class="finding-fix">Correção na v2: §4.5 reescrito com diagnóstico correto. Estratégia: marcar v1 como superseded, metadata linking para forçar co-recuperação de §5 com §2.</div>
+      </div>
+      <div class="finding high">
+        <div class="finding-header"><span class="severity high">High</span><div class="finding-title">FAQ-Atendimento ausente da estimativa e sem estratégia</div></div>
+        <div class="finding-body">A tabela de tokens da v1 tinha três fontes; o FAQ — quinta fonte — estava ausente. Também não havia estratégia de indexação para fontes informais.</div>
+        <div class="finding-fix">Correção na v2: FAQ adicionado ao §2 (~12K tokens). Seção §4.6 com metadado source_type: informal, penalidade no re-ranker e instrução de disclaimer no system prompt.</div>
+      </div>
+      <div class="finding medium">
+        <div class="finding-header"><span class="severity medium">Medium</span><div class="finding-title">Conflito não resolvido: chunk de 512 tokens vs. "tabela nunca é dividida"</div></div>
+        <div class="finding-body">A v1 reconhecia o conflito mas não resolvia. O pipeline não tinha regra para tabelas maiores que o limite.</div>
+        <div class="finding-fix">Correção: dois perfis de chunk — Padrão (256–512 tok) para texto narrativo; Tabela (inteira, cap 2K tok) para estruturas tabulares.</div>
+      </div>
+      <div class="finding medium">
+        <div class="finding-header"><span class="severity medium">Medium</span><div class="finding-title">Recall percentages (85–90%, 91–92%) citavam um vídeo do YouTube</div></div>
+        <div class="finding-body">A referência [5] é um talk do CEO da Chroma no Y Combinator — não um paper peer-reviewed. Números específicos sem metodologia reproduzível não sustentam recomendação técnica.</div>
+        <div class="finding-fix">Correção: percentuais removidos. Substituídos por orientação de validar com o gabarito do Anexo B.</div>
+      </div>
+      <div class="finding medium">
+        <div class="finding-header"><span class="severity medium">Medium</span><div class="finding-title">Referência "arXiv de janeiro de 2026" sem identificador</div></div>
+        <div class="finding-body">Nenhum título, nenhum ID de arXiv. A afirmação sobre overlap ser desnecessário é relevante mas não verificável como escrita na v1.</div>
+        <div class="finding-fix">Correção: referência removida. Substituída por postura empírica: "começar em 10%, medir recall com Anexo B, ajustar".</div>
+      </div>
+      <div class="finding low">
+        <div class="finding-header"><span class="severity low">Low</span><div class="finding-title">Modelo de referência oscilava entre GPT-4o e Claude Sonnet 4.6</div></div>
+        <div class="finding-body">A aritmética de orçamento usava GPT-4o 128K, mas o sumário também mencionava Claude Sonnet 4.6 (200K) sem declarar qual era o modelo de produção.</div>
+        <div class="finding-fix">Correção: modelo declarado no Sumário Executivo (GPT-4o, por constraint Azure).</div>
+      </div>
+      <div class="finding low">
+        <div class="finding-header"><span class="severity low">Low</span><div class="finding-title">"Considerar não indexar" para planilhas complexas sem critério</div></div>
+        <div class="finding-body">A v1 usava "considerar" sem definir quando indexar vs. expor como tool.</div>
+        <div class="finding-fix">Correção: critério explícito — indexar quando valor estável; expor como function call quando depende de variáveis externas dinâmicas.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- O QUE MUDOU -->
+  <div class="card">
+    <div class="section-label">v1 → v2</div>
+    <h2>O que mudou entre as versões</h2>
+    <div style="overflow-x:auto;">
+      <table class="diff-table">
+        <thead>
+          <tr>
+            <th>Ponto</th>
+            <th class="diff-before">v1 (problema)</th>
+            <th class="diff-after">v2 (correção)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Traps do caso</td><td class="diff-before">Só PROC-042 vs v2 coberto</td><td class="diff-after">§1.5 cobre 3 traps: carga perigosa, Platinum, valor base do frete</td></tr>
+          <tr><td>Vigência PROC-042</td><td class="diff-before">"Sem indicação de vigência"</td><td class="diff-after">§5 de v2 tem data; problema é archivamento, não ausência de data</td></tr>
+          <tr><td>FAQ-Atendimento</td><td class="diff-before">Ausente da estimativa</td><td class="diff-after">Adicionado ao §2; §4.6 define hierarquia de fontes informais</td></tr>
+          <tr><td>Chunk vs. tabela</td><td class="diff-before">Conflito não resolvido</td><td class="diff-after">Dois perfis: Padrão (256–512 tok) e Tabela (inteira, cap 2K)</td></tr>
+          <tr><td>Recall percentages</td><td class="diff-before">85–90% / 91–92% sem fonte</td><td class="diff-after">Removidos; validação pelo gabarito do Anexo B</td></tr>
+          <tr><td>XLSX — quando indexar</td><td class="diff-before">"Considerar não indexar"</td><td class="diff-after">Critério explícito: estável → indexar; dinâmico → function call</td></tr>
+          <tr><td>Modelo de referência</td><td class="diff-before">GPT-4o e Claude 4.6 misturados</td><td class="diff-after">GPT-4o declarado como referência (constraint Azure)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CRITÉRIOS DE AVALIAÇÃO -->
+  <div class="card">
+    <div class="section-label">Avaliação</div>
+    <h2>Critérios de avaliação — todos atendidos</h2>
+    <ul class="checklist">
+      <li><span class="check-icon">✓</span><div class="check-text"><strong>Diferentes tipos de conteúdo → diferentes estratégias</strong>§1.1 a §1.5 cobrem PDFs com tabelas, PDFs escaneados, Confluence wiki, XLSX e FAQ — cada um com desafio, impacto na resposta e estratégia específica.</div></li>
+      <li><span class="check-icon">✓</span><div class="check-text"><strong>Estimativa de tokens razoável e fundamentada</strong>§2 tem tabela com cinco fontes, regra de conversão explícita, correção de +20% para PT-BR e conclusão de escala (60× a janela do GPT-4o).</div></li>
+      <li><span class="check-icon">✓</span><div class="check-text"><strong>Context window como recurso limitado — não "quanto maior melhor"</strong>§3 demonstra lost-in-the-middle, context rot e orçamento operacional de 5–7% com tabela de componentes por tokens.</div></li>
+      <li><span class="check-icon">✓</span><div class="check-text"><strong>Chunking justificado pelo tipo de pergunta e efeito lost-in-the-middle</strong>§4 define dois perfis, boundaries semânticos, overlap tunável e posicionamento do chunk mais relevante por último no prompt.</div></li>
+      <li><span class="check-icon">✓</span><div class="check-text"><strong>Iteração com Claude melhorou o documento de forma verificável</strong>§6 da v2 mapeia explicitamente cada High finding para a correção. 3 Highs, 3 Mediums, 2 Lows — todos documentados.</div></li>
+      <li><span class="check-icon">✓</span><div class="check-text"><strong>Evidência de uso de ferramenta de IA</strong>Screenshot da conversa com Claude incluído na pasta do exercício.</div></li>
+    </ul>
+  </div>
+
+  <!-- ARQUIVOS ENTREGUES -->
+  <div class="card">
+    <div class="section-label">Entregáveis</div>
+    <h2>Arquivos produzidos</h2>
+    <div class="files">
+      <div class="file-row"><span class="file-icon">📝</span><span class="file-name">analise-tecnica-v1.md</span><span class="file-desc">Rascunho inicial — 5 seções, 175 linhas</span></div>
+      <div class="file-row"><span class="file-icon">📝</span><span class="file-name">analise-tecnica-v2.md</span><span class="file-desc">Versão revisada — 6 seções + §6 de mapeamento, 268 linhas</span></div>
+      <div class="file-row"><span class="file-icon">🖼️</span><span class="file-name">Evidência Conversa com IA Exercicio 1.1.png</span><span class="file-desc">Screenshot do histórico de iteração com Claude</span></div>
+      <div class="file-row"><span class="file-icon">📚</span><span class="file-name">referencias.md</span><span class="file-desc">Bibliografia completa com 6 referências anotadas</span></div>
+      <div class="file-row"><span class="file-icon">📋</span><span class="file-name">resumo-exercicio-1.1.md</span><span class="file-desc">Resumo textual do exercício (Markdown)</span></div>
+      <div class="file-row"><span class="file-icon">🌐</span><span class="file-name">resumo-visual-exercicio-1.1.html</span><span class="file-desc">Este arquivo — versão visual completa (HTML)</span></div>
+    </div>
+  </div>
+
+  <!-- APRENDIZADOS -->
+  <div class="card">
+    <div class="section-label">Síntese Técnica</div>
+    <h2>Principais aprendizados do exercício</h2>
+    <h3>RAG é problema de engenharia de dados, não de modelo</h3>
+    <p>A qualidade das respostas é determinada na ingestão — antes de o LLM ser chamado. Extratores inadequados para tabelas e PDFs escaneados corrompem chunks que nenhuma engenharia de prompt vai corrigir.</p>
+    <h3>Orçamento de contexto como invariante de design</h3>
+    <p>A decisão de usar 5–7% da janela (não 95%) resulta de entender lost-in-the-middle e context rot como fenômenos arquiteturais, não como bugs de versões futuras do modelo.</p>
+    <h3>Contradições documentais exigem tratamento no pipeline, não no prompt</h3>
+    <p>Instruir o modelo a "apresentar ambas as versões" é insuficiente se o retriever não garantir que os chunks de vigência chegam ao contexto junto com os chunks de multiplicadores.</p>
+    <h3>Armadilhas de domínio são mais perigosas que limitações de tecnologia</h3>
+    <p>Um assistente que ignora a exceção de cargas perigosas (POL-001 §3.2) ou inventa um tier Platinum causa dano operacional real. Essas situações precisam de tratamento explícito antes do primeiro deploy.</p>
+  </div>
+
+</div>
+</body>
+</html>
