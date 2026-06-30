@@ -55,7 +55,8 @@ def buscar(
     )
 
     results = []
-    for doc, meta, dist in zip(
+    for cid, doc, meta, dist in zip(
+        raw["ids"][0],
         raw["documents"][0],
         raw["metadatas"][0],
         raw["distances"][0],
@@ -71,7 +72,7 @@ def buscar(
             adjusted -= INFORMAL_PENALTY
 
         results.append(ChunkResult(
-            chunk_id=raw["ids"][0][len(results)],
+            chunk_id=cid,
             text=doc,
             score=round(adjusted, 4),
             raw_score=round(raw_score, 4),
@@ -91,11 +92,12 @@ def imprimir_resultados(pergunta: str, resultados: list[ChunkResult]) -> None:
     print(f"PERGUNTA: {pergunta}")
     print(f"{'='*70}")
     for i, r in enumerate(resultados, 1):
-        penalty_flag = ""
+        flags = []
         if r.status == "superseded":
-            penalty_flag = f" [-{SUPERSEDED_PENALTY} superseded]"
-        elif r.source_type == "informal":
-            penalty_flag = f" [-{INFORMAL_PENALTY} informal]"
+            flags.append(f"-{SUPERSEDED_PENALTY} superseded")
+        if r.source_type == "informal":
+            flags.append(f"-{INFORMAL_PENALTY} informal")
+        penalty_flag = f" [{', '.join(flags)}]" if flags else ""
         print(f"\n[{i}] score={r.score:.4f} (raw={r.raw_score:.4f}{penalty_flag})")
         print(f"     {r.doc_id} | {r.section[:50]} | {r.source_type} | {r.status}")
         print(f"     {r.text[:200].replace(chr(10), ' ')}...")

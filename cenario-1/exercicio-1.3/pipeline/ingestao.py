@@ -56,16 +56,22 @@ def _chunk_id(doc_id: str, section: str, index: int) -> str:
 
 
 def _split_sections(text: str) -> list[dict]:
-    """Split document into sections at H2/H3 heading boundaries."""
+    """Split document into sections at H2/H3 heading boundaries.
+
+    H1 is intentionally excluded from the split boundary so the document
+    title + metadata block (version, responsible, classification) stays
+    attached to the first section instead of becoming an orphan ~30-word chunk.
+    """
     # Split keeping the delimiter (heading) with each section
-    parts = re.split(r"(?=\n#{1,3} )", "\n" + text)
+    parts = re.split(r"(?=\n#{2,3} )", "\n" + text)
     sections = []
     for part in parts:
         part = part.strip()
         if not part:
             continue
-        heading_match = re.match(r"^(#{1,3})\s+(.+)", part)
-        heading = heading_match.group(2).strip() if heading_match else "header"
+        # Match any heading level (H1–H3) to extract the label
+        heading_match = re.match(r"^#{1,3}\s+(.+)", part)
+        heading = heading_match.group(1).strip() if heading_match else "header"
         sections.append({"heading": heading, "text": part})
     return sections
 

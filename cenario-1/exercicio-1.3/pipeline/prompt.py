@@ -53,7 +53,7 @@ def montar_prompt(pergunta: str, chunks: list[ChunkResult]) -> str:
     for i, chunk in enumerate(chunks_ordenados, 1):
         informal_warn = " [FONTE INFORMAL — confirme na documentação normativa]" \
             if chunk.source_type == "informal" else ""
-        superseded_warn = " [VERSÃO SUPERSEDIDA — use apenas para chamados anteriores a 01/12/2023]" \
+        superseded_warn = " [VERSÃO SUPERSEDIDA — consulte a versão ativa antes de responder]" \
             if chunk.status == "superseded" else ""
 
         context_parts.append(
