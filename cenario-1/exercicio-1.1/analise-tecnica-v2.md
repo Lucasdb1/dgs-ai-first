@@ -89,6 +89,8 @@ Aplicando a regra prática `tokens ≈ palavras / 0,75` aos dados fornecidos, in
 
 A base total é portanto **da ordem de 60x maior** que a janela do GPT-4o (128K) e **37x maior** que a do Claude Sonnet 4.6 (200K). Confirma-se que carregar a base inteira no contexto é tecnicamente impossível, e que a única arquitetura viável passa por **recuperação seletiva** (RAG).
 
+**Nota sobre a estimativa:** Os números acima são conservadores — partem dos dados fornecidos sem contar cabeçalhos, rodapés, índices e metadados dos PDFs (que podem adicionar 10–20% ao volume), nem planilhas com múltiplas abas (estimadas em 3.000 palavras-equivalente por arquivo, mas potencialmente maiores). Uma estimativa de campo com amostra real dos documentos provavelmente chegaria a 8–10M tokens. O valor de ~7,5M aqui serve como piso conservador para o dimensionamento inicial.
+
 **Nota sobre o FAQ-Atendimento:** Embora pequeno (~12K tokens), o FAQ requer tratamento diferenciado. É um documento informal, sem validação de Compliance ou Operações, que pode contradizer a documentação normativa. Sua indexação e seu peso no ranking precisam refletir essa condição — ver §4.6.
 
 ---
@@ -211,6 +213,8 @@ O FAQ-Atendimento é um documento informal, mantido pelo time de atendimento sem
 ## 5. Conclusão
 
 O projeto é viável. Os limites de janela de contexto e os efeitos cognitivos dos LLMs (lost in the middle, context rot) são reais e bem documentados — mas conhecidos. As decisões arquiteturais aqui defendidas — pipeline de ingestão sensível ao tipo de fonte, dois perfis de chunk, orçamento de contexto enxuto, re-ranking, tratamento explícito de versões e hierarquia de fontes — endereçam esses limites diretamente.
+
+Com 320 chamados/dia e ~60% envolvendo consulta a documentação, mesmo uma taxa de erro de 5% por resposta incorreta representa ~10 erros operacionais diários — o que reforça a necessidade de orçamento de contexto conservador e tratamento explícito das exceções críticas documentadas nas seções anteriores.
 
 O maior risco do projeto **não é o LLM**: é a qualidade e a governança da base. Documentos contraditórios sem arquivamento formal, ausência de versionamento explícito e curadoria mensal por três áreas sem revisão unificada são problemas de processo. A camada técnica do RAG pode mitigá-los (mostrando contradições, marcando documentos obsoletos, penalizando fontes informais), mas a solução completa exige acordo com Operações, Compliance e Comercial sobre processo mínimo de versionamento na origem.
 
