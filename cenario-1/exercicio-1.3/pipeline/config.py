@@ -9,9 +9,19 @@ COLLECTION_NAME = "novatech_docs"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 
 # Chunking
-STANDARD_MAX_WORDS = 400   # ~533 tokens (PT-BR ~1.2x factor)
-TABLE_MAX_WORDS = 1500     # ~2000 tokens cap for table chunks
-OVERLAP_WORDS = 40         # ~10% of standard chunk
+# STANDARD_MAX_WORDS: 400 palavras × (1/0.75) × 1.2 (PT-BR) ≈ 533 tokens por chunk.
+# Orçamento calculado no Ex. 1.1: janela GPT-4o 128K, system prompt ~2K, margem ~1K,
+# 5-8 chunks práticos → teto por chunk ≈ 500-600 tokens. 400 palavras fica dentro desse envelope.
+STANDARD_MAX_WORDS = 400
+
+# TABLE_MAX_WORDS: cap de 1500 palavras (~2000 tokens) evita que tabelas grandes
+# dominem o contexto. Tabelas da NovaTech (multiplicadores, SLA) têm ~200-400 palavras —
+# o cap é uma salvaguarda, não um limite ativo nos documentos atuais.
+TABLE_MAX_WORDS = 1500
+
+# OVERLAP_WORDS: 40 palavras = ~10% de um chunk padrão de 400 palavras.
+# Garante continuidade de contexto em fronteiras de seção sem duplicar tokens em excesso.
+OVERLAP_WORDS = 40
 
 # Per-document metadata
 DOC_METADATA = {
