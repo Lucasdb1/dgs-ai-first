@@ -75,6 +75,8 @@ do atendente. Use apenas as informações presentes nesses trechos.
 
 **Observação:** A parte estática (identidade + regras + formato) ocupa ~320 tokens fixos — menos de 0,3% da janela do GPT-4o (128K). O orçamento real é dominado pelos chunks dinâmicos e pelo histórico crescente, que precisam ser gerenciados ativamente (ver análise de orçamento em analise-tecnica-v2.md §3).
 
+**Metodologia de estimativa de tokens:** contagem manual de palavras ÷ 0,75 (regra padrão para inglês) × 1,2 (fator de correção para português, que gera mais tokens por palavra devido a acentuação e sufixos morfológicos). Os valores na tabela são estimativas de ordem de grandeza, não contagens exatas.
+
 ---
 
 ## Chunks de teste (conforme enunciado do exercício)

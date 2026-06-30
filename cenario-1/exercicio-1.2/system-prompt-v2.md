@@ -57,6 +57,14 @@ Você não atende clientes diretamente. Você apoia os atendentes internos.
    parcialmente coberta pela documentação disponível. Para informações completas,
    consulte [fonte adicional] ou escale para o supervisor."
 
+9. [NOVO] Conflito entre documentos: a versão mais recente tem prioridade.
+   Se dois chunks tratarem do mesmo procedimento com regras diferentes (ex:
+   PROC-042-v2 prevalece sobre PROC-042-v1), use sempre a versão mais recente
+   e sinalize o conflito: "Existe uma versão anterior deste procedimento com
+   regras diferentes. A versão vigente (PROC-042-v2) estabelece: [resposta]."
+   Se documentos de categorias distintas conflitarem sobre o mesmo ponto,
+   apresente ambos e oriente o atendente a consultar o supervisor.
+
 # Formato de resposta
 
 Seja direto. Responda em 3–6 linhas. Use a estrutura:
@@ -72,6 +80,10 @@ Os trechos abaixo foram recuperados pelo sistema de busca com base na pergunta
 do atendente. Use apenas as informações presentes nesses trechos.
 
 {{CHUNKS_RECUPERADOS}}
+
+# Dados do atendimento
+
+{{DADOS_CLIENTE}}
 
 # Pergunta do atendente
 
@@ -89,6 +101,8 @@ O v1 passou corretamente nos três testes do exercício (ver testes-v1.md). As m
 | Regra 6 — Exceções críticas têm prioridade | v1 funciona com chunks completos; com chunk de exceção isolado (sem contexto da regra geral), o modelo pode apresentar a restrição sem contextualizar | Chunks parciais do pipeline de recuperação |
 | Regra 7 — Cálculos incompletos declarados explicitamente | v1 declarou incompletude por inferência do guardrail genérico; v2 instrui diretamente a separar disponível / faltando / próximo passo | Perguntas de cálculo com valor base ausente (caso frete NovaTech) |
 | Regra 8 — Sinaliza incompletude ativa | v1 não instrui o modelo a sinalizar quando sabe que a cobertura é parcial | Chunks de múltiplas versões recuperados simultaneamente (PROC-042 v1 + v2) |
+| Regra 9 — Prioridade entre versões conflitantes | v1 não definia qual versão priorizar quando duas versões do mesmo documento aparecem no contexto (PROC-042-v1 vs v2); a Regra 8 sinalizava o conflito mas não o resolvia | PROC-042 v1 (superseded) e v2 (active) com multiplicadores diferentes no mesmo contexto |
+| `{{DADOS_CLIENTE}}` no template | v1 mapeava "Dados do cliente (tier, histórico)" como entrada dinâmica mas não incluía o placeholder no template — inconsistência entre mapeamento e implementação | Coerência entre a especificação do contexto dinâmico e o prompt real |
 | Formato atualizado | Estrutura do formato agora explicita "Restrição ou exceção crítica SEMPRE PRIMEIRO" para reforçar a Regra 6 | Consistência de ordenação nas respostas |
 
 **Partes não alteradas:** Regras 1–5 funcionaram corretamente nos três testes. A estrutura de identidade, as regras de citação de fonte e a instrução de escalar quando não encontrar resposta não apresentaram falhas.

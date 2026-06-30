@@ -50,7 +50,11 @@ Região Nordeste: 1.5. Região Centro-Oeste: 1.4.
 | Respeitou os guardrails? | Sim | Não inventou informação |
 | Comportamento adequado para o domínio? | Sim | |
 
-**Avaliação:** O v1 já trata corretamente esta armadilha. O modelo liderou com a restrição sem mencionar "7 dias úteis" como regra aplicável, e recomendou escalar ao supervisor.
+**Avaliação:** ATENÇÃO PARCIAL — A resposta liderou com a exceção e não inventou informação, mas a frase "não estabelece prazo alternativo para devolução desse tipo de carga" é ambígua. Ela implica que pode existir um processo de devolução não documentado, quando o correto é que cargas perigosas **NÃO são elegíveis para devolução** pelo processo padrão. Um atendente pode entender que talvez exista um caminho alternativo — o que é incorreto.
+
+A resposta correta deveria afirmar diretamente: *"Cargas perigosas (classes 1–6 ANTT) não são elegíveis para devolução, conforme POL-001 seção 3.2."*
+
+Esta ambiguidade foi identificada como melhoria para o v2: a Regra 6 ("exceções críticas têm prioridade") combinada com o novo formato ("Restrição crítica SEMPRE PRIMEIRO") produziria uma resposta v2 inequívoca: *"Cargas perigosas NÃO são elegíveis para devolução pelo processo padrão — encaminhe para o supervisor para tratamento específico. [Fonte: POL-001, seção 3.2]"*
 
 **Gap remanescente (pipeline, não prompt):** O Chunk A do exercício não inclui a orientação de encaminhar para Gestão de Riscos (ramal 4500) — essa informação está no POL-001-B completo do Anexo B. O assistente sinaliza escalada genérica ao supervisor, mas não informa o ramal específico. Isso não é falha do prompt — é limitação do pipeline de recuperação: POL-001-B precisa ser co-recuperado com POL-001-A (ver analise-tecnica-v2.md §1.5.1).
 
