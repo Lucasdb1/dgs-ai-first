@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Avaliação Ex. 1.3 — Pipeline RAG | DGS AI First</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0D1117;
+  --surface: #161B22;
+  --surface-hi: #1C2128;
+  --border: #30363D;
+  --border-sub: #21262D;
+  --text: #E6EDF3;
+  --text-dim: #8B949E;
+  --text-muted: #484F58;
+  --green: #3FB950;
+  --yellow: #E3B341;
+  --red: #F85149;
+  --blue: #58A6FF;
+  --orange: #F0883E;
+  --mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'SF Mono', 'Consolas', monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.wrap {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+/* ── Header ── */
+.header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+}
+.header-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  margin-bottom: 8px;
+}
+.header-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  text-wrap: balance;
+}
+.header-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 5px;
+}
+
+/* ── Verdict banner ── */
+.verdict {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-bottom: 32px;
+}
+
+.verdict-score {
+  font-family: var(--mono);
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--yellow);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.verdict-score .denom {
+  font-size: 26px;
+  color: var(--text-muted);
+}
+
+.verdict-details { flex: 1; min-width: 0; }
+.verdict-headline {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.verdict-note {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.verdict-potential {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--green);
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.verdict-potential::before { content: '↑'; }
+
+@media (max-width: 560px) {
+  .verdict { flex-direction: column; align-items: flex-start; gap: 16px; }
+}
+
+/* ── Score grid ── */
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 48px;
+}
+
+@media (max-width: 680px) {
+  .score-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 420px) {
+  .score-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.dim-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 14px;
+  position: relative;
+}
+.dim-card.flag {
+  border-color: rgba(248, 81, 73, 0.5);
+  background: rgba(248, 81, 73, 0.04);
+}
+.flag-icon {
+  position: absolute;
+  top: 9px;
+  right: 11px;
+  font-size: 11px;
+  color: var(--red);
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.dim-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+.dim-num {
+  font-family: var(--mono);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 10px;
+}
+.dim-num.s3 { color: var(--green); }
+.dim-num.s2 { color: var(--yellow); }
+.dim-num.s1 { color: var(--red); }
+
+.dim-dots {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.dot.g { background: var(--green); }
+.dot.r { background: var(--red); }
+.dot.y { background: var(--yellow); }
+
+.dim-name {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+
+/* ── Section ── */
+.section {
+  margin-bottom: 40px;
+}
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-sub);
+  flex-wrap: wrap;
+}
+.section-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  flex-shrink: 0;
+}
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+}
+.score-badge {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.score-badge.s3 { background: rgba(63,185,80,0.12); color: var(--green); }
+.score-badge.s2 { background: rgba(227,179,65,0.12); color: var(--yellow); }
+.score-badge.s1 { background: rgba(248,81,73,0.12); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+
+.section p {
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  line-height: 1.7;
+  font-size: 13.5px;
+}
+.section p:last-child { margin-bottom: 0; }
+.section p strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.ev-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 14px 0;
+}
+.ev-list li {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.ev-icon {
+  flex-shrink: 0;
+  width: 16px;
+  font-weight: 700;
+  padding-top: 1px;
+}
+.ev-icon.pass { color: var(--green); }
+.ev-icon.fail { color: var(--red); }
+.ev-icon.note { color: var(--blue); }
+.ev-text { color: var(--text-dim); }
+.ev-text strong { color: var(--text); }
+
+.icode {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--surface-hi);
+  border: 1px solid var(--border-sub);
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: var(--orange);
+}
+
+/* ── Flag box ── */
+.flag-box {
+  background: rgba(248,81,73,0.07);
+  border: 1px solid rgba(248,81,73,0.25);
+  border-left: 3px solid var(--red);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin: 16px 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+.flag-box .box-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--red);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 7px;
+}
+.flag-box strong { color: var(--text); }
+
+/* ── Note box ── */
+.note-box {
+  background: rgba(88,166,255,0.05);
+  border: 1px solid rgba(88,166,255,0.2);
+  border-left: 3px solid var(--blue);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin: 16px 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+.note-box .box-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 7px;
+}
+.note-box strong { color: var(--text); }
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-sub);
+  margin: 40px 0;
+}
+
+/* ── Action plan ── */
+.action-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px 28px;
+  margin-top: 48px;
+}
+.action-header {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.action-header::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 17px;
+  background: var(--blue);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.action-item {
+  display: flex;
+  gap: 18px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-sub);
+}
+.action-item:last-child { border-bottom: none; padding-bottom: 0; }
+.action-item:first-of-type { padding-top: 0; }
+
+.action-rank {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  width: 24px;
+  padding-top: 2px;
+  text-align: right;
+}
+
+.action-body { flex: 1; min-width: 0; }
+.action-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.action-desc {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.action-desc code {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--surface-hi);
+  border: 1px solid var(--border-sub);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--orange);
+}
+
+.tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.tag-max  { background: rgba(63,185,80,0.15);  color: var(--green); }
+.tag-high { background: rgba(227,179,65,0.15); color: var(--yellow); }
+.tag-mid  { background: rgba(88,166,255,0.12); color: var(--blue); }
+.tag-low  { background: rgba(139,148,158,0.1); color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-meta">DGS AI First · Trilha Desenvolvedor · Cenário 1 · Pré-avaliação</div>
+    <div class="header-title">Exercício 1.3 — Construção de pipeline de RAG com ferramentas open-source</div>
+    <div class="header-sub">Python 3.12 · ChromaDB 0.5.23 · sentence-transformers 3.3.1 (all-MiniLM-L6-v2)</div>
+  </div>
+
+  <!-- Verdict -->
+  <div class="verdict">
+    <div class="verdict-score">13<span class="denom">/15</span></div>
+    <div class="verdict-details">
+      <div class="verdict-headline">Entregável forte — uma lacuna crítica a resolver</div>
+      <div class="verdict-note">
+        O pipeline é técnico, funcional e específico ao domínio NovaTech. Chunking justificado, re-ranking implementado, 5/5 testes passaram com evidência quantitativa real. O único ponto que impede nota máxima é a ausência de evidências de Copilot no documento submetido — uma correção que pode adicionar 2 pontos com esforço mínimo se o material já existe no repositório.
+      </div>
+      <div class="verdict-potential">Potencial com correções: 15/15</div>
+    </div>
+  </div>
+
+  <!-- Score grid -->
+  <div class="score-grid">
+    <div class="dim-card">
+      <div class="dim-label">D1</div>
+      <div class="dim-num s3">3</div>
+      <div class="dim-dots">
+        <div class="dot g"></div><div class="dot g"></div><div class="dot g"></div>
+      </div>
+      <div class="dim-name">Domínio Conceitual</div>
+    </div>
+    <div class="dim-card flag">
+      <span class="flag-icon">RED FLAG</span>
+      <div class="dim-label">D2</div>
+      <div class="dim-num s1">1</div>
+      <div class="dim-dots">
+        <div class="dot r"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+      <div class="dim-name">Uso de Ferramentas</div>
+    </div>
+    <div class="dim-card">
+      <div class="dim-label">D3</div>
+      <div class="dim-num s3">3</div>
+      <div class="dim-dots">
+        <div class="dot g"></div><div class="dot g"></div><div class="dot g"></div>
+      </div>
+      <div class="dim-name">Qualidade do Entregável</div>
+    </div>
+    <div class="dim-card">
+      <div class="dim-label">D4</div>
+      <div class="dim-num s3">3</div>
+      <div class="dim-dots">
+        <div class="dot g"></div><div class="dot g"></div><div class="dot g"></div>
+      </div>
+      <div class="dim-name">Pensamento Crítico</div>
+    </div>
+    <div class="dim-card">
+      <div class="dim-label">D5</div>
+      <div class="dim-num s3">3</div>
+      <div class="dim-dots">
+        <div class="dot g"></div><div class="dot g"></div><div class="dot g"></div>
+      </div>
+      <div class="dim-name">Aplicabilidade ao Projeto</div>
+    </div>
+  </div>
+
+  <!-- D1 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-tag">D1</span>
+      <span class="section-title">Domínio Conceitual</span>
+      <span class="score-badge s3">3 / 3</span>
+    </div>
+    <p>
+      O candidato demonstra compreensão real do que está sendo abstraído. <strong>Não usou LangChain</strong> — construiu diretamente sobre ChromaDB + sentence-transformers, o que prova que entende cada camada. Quem usa LangChain sem entender o substrato não consegue derivar por que <span class="icode">_table_to_prose()</span> é necessária, nem implementá-la corretamente.
+    </p>
+    <ul class="ev-list">
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">Explica <em>por que</em> o <span class="icode">all-MiniLM-L6-v2</span> embeddifica mal tabelas Markdown — pipe characters e repetição de células reduzem qualidade do vetor. Não apenas diz "a qualidade era baixa".</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">Re-ranking com penalidades derivadas de propriedades documentais (superseded −0.15, informal −0.10) mostra que retrieval não é apenas similaridade vetorial.</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">Lost-in-the-middle mitigation aplicada no <span class="icode">montar_prompt()</span> com justificativa explícita — chunk mais relevante posicionado por último.</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">Chunking semântico por heading H2/H3, não window fixo — demonstra que entende "chunk como unidade de contexto" (tópico central do exercício).</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">Dois perfis distintos: standard ≤400 palavras, table ≤1500 — tabelas nunca cortadas ao meio, preservando integridade semântica.</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text"><span class="icode">table_to_prose</span>: prosa inserida no início do chunk (capturada pelo embedding), tabela original preservada ao final (lida pelo LLM). Dois consumidores, dois formatos.</span>
+      </li>
+    </ul>
+    <p>
+      A rubrica alerta: <em>"Se usou LangChain sem entender o que está abstraído → D1 ≤ 2."</em> O candidato tomou o caminho oposto.
+    </p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- D2 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-tag">D2</span>
+      <span class="section-title">Uso de Ferramentas (GitHub Copilot)</span>
+      <span class="score-badge s1">1 / 3</span>
+    </div>
+
+    <div class="flag-box">
+      <span class="box-label">Regra automática ativada</span>
+      O exercício exige <strong>"Prompts/completions do Copilot na geração do código"</strong> — sem isso, o rubric é explícito: <em>"Sem evidência → D2 ≤ 1"</em>. O documento submetido nesta avaliação não contém nenhum prompt, completion, captura de iteração ou transcrição do Copilot. A regra não é discricionária.
+    </div>
+
+    <p>
+      O git log do repositório contém o commit <span class="icode">feat: adiciona evidências de uso do Copilot CLI - Exercício 1.3</span>, o que sugere que arquivos de evidência <strong>existem no repositório mas não foram incluídos neste entregável</strong>. Se for isso, a correção é colocar o conteúdo desse arquivo aqui.
+    </p>
+
+    <p>Para atingir D2 = 3, a evidência precisa mostrar iteração real — não apenas "usei o Copilot":</p>
+    <ul class="ev-list">
+      <li>
+        <span class="ev-icon note">→</span>
+        <span class="ev-text">Pelo menos 3 prompts distintos com o contexto real passado ao Copilot durante a construção do pipeline</span>
+      </li>
+      <li>
+        <span class="ev-icon note">→</span>
+        <span class="ev-text">Iteração demonstrada: v1 gerado → análise crítica do output → prompt refinado → v2 diferente (e por que melhorou)</span>
+      </li>
+      <li>
+        <span class="ev-icon note">→</span>
+        <span class="ev-text">Ao menos um exemplo onde o Copilot errou e o que foi corrigido — prova que o output foi analisado criticamente, não aceito acriticamente</span>
+      </li>
+    </ul>
+
+    <div class="note-box">
+      <span class="box-label">Observação</span>
+      Se as evidências existem no repositório e simplesmente não foram incluídas neste documento, <strong>D2 pode ir de 1 → 3 sem escrever uma linha de código</strong>. Este é o único item que impede nota máxima. A qualidade técnica do código já demonstra que o Copilot foi usado como amplificador, não como substituto — falta apenas a documentação disso.
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- D3 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-tag">D3</span>
+      <span class="section-title">Qualidade do Entregável</span>
+      <span class="score-badge s3">3 / 3</span>
+    </div>
+    <p>
+      O código é completo, funcional e específico ao NovaTech. Não é pseudocódigo — usa a API real do ChromaDB com <span class="icode">PersistentClient</span>, <span class="icode">SentenceTransformer.encode()</span>, e os resultados de teste exibem scores decimais precisos (0.8066, 0.7918) e contagem de chunks (39) que só existem mediante execução real.
+    </p>
+    <ul class="ev-list">
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">4 módulos completos com lógica real: <span class="icode">config.py</span>, <span class="icode">ingestao.py</span>, <span class="icode">busca.py</span>, <span class="icode">prompt.py</span></span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">39 chunks indexados com metadados completos por documento (doc_id, status, version, source_type, chunk_type)</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">5/5 testes com scores reais e comparação explícita ao gabarito do Anexo B — incluindo notas sobre posições e near-misses</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">2 problemas reais identificados — ambos derivados dos testes, com mecanismo de causa descrito</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">Problema 1 resolvido com antes/depois quantificado: score 0.7362 → 0.7826, posição 6 → 3</span>
+      </li>
+    </ul>
+    <p>
+      Dois gaps de empacotamento que não cortam D3 mas que um avaliador vai notar:
+    </p>
+    <ul class="ev-list">
+      <li>
+        <span class="ev-icon fail">✗</span>
+        <span class="ev-text">Sem <span class="icode">requirements.txt</span> — as versões aparecem nos resultados (ChromaDB 0.5.23, sentence-transformers 3.3.1) mas não estão formalizadas. O avaliador não consegue reproduzir sem buscar.</span>
+      </li>
+      <li>
+        <span class="ev-icon fail">✗</span>
+        <span class="ev-text">Sem script integrador (<span class="icode">main.py</span> ou <span class="icode">run_tests.py</span>) — os 4 módulos existem mas não há demonstração explícita de como o pipeline completo é chamado end-to-end.</span>
+      </li>
+    </ul>
+  </div>
+
+  <hr class="divider">
+
+  <!-- D4 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-tag">D4</span>
+      <span class="section-title">Pensamento Crítico</span>
+      <span class="score-badge s3">3 / 3</span>
+    </div>
+    <p>
+      Ponto mais forte do entregável. O candidato não apenas reporta resultados — <strong>explica causas, quantifica impacto das correções, e verifica ativamente a ausência de resultados errados</strong> (não só a presença dos corretos).
+    </p>
+    <ul class="ev-list">
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text"><strong>T3 — antes/depois quantificado com causa concreta:</strong> "pipe characters e repetição de células" como mecanismo, não vaga referência a "qualidade do embedding". Score +0.046, posição +3.</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text"><strong>T1 — observação além do pass/fail:</strong> chunk de exceções (§3.2) recuperado em posição 7, não top-3. Propõe co-recuperação obrigatória como solução sistêmica, não ajuste de score.</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text"><strong>T5 — verificação negativa:</strong> confirma que PROC-042-v1 (Sudeste=1.0) não apareceu no top-8. Não basta o resultado correto estar presente — é necessário que o resultado errado esteja ausente.</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text"><strong>Problema 2 — mecanismo identificado:</strong> "vocabulário compartilhado ('cliente', 'prazo', 'carga') infla similaridade cross-domain." Proposta em duas frentes: metadado topic + BM25 híbrido.</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text"><strong>Escala de produção referenciada:</strong> "Em produção com 1.250 documentos, separação seria naturalmente maior" — o candidato entende o limite do PoC sem minimizar o problema.</span>
+      </li>
+    </ul>
+  </div>
+
+  <hr class="divider">
+
+  <!-- D5 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-tag">D5</span>
+      <span class="section-title">Aplicabilidade ao Projeto</span>
+      <span class="score-badge s3">3 / 3</span>
+    </div>
+    <p>
+      O pipeline está ancorado nos documentos reais da NovaTech, não em dados sintéticos. As decisões de design derivam diretamente das características conhecidas de cada fonte — não são configurações genéricas reutilizadas de tutorial.
+    </p>
+    <ul class="ev-list">
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">Todos os 5 documentos NovaTech indexados com metadados corretos: POL-001, PROC-042 (v1 superseded), PROC-042-v2 (active), SLA-2024, FAQ-Atendimento</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">PROC-042 v1 marcado como <span class="icode">superseded</span> com penalidade de re-ranking dedicada — trata a armadilha de contradição entre versões como dado do domínio, não edge case genérico</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">Perguntas de teste específicas ao negócio NovaTech: carga perigosa (exclusão de escopo POL-001), multiplicador regional Sudeste, SLA Gold — não perguntas genéricas de "RAG demo"</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">System prompt com regras específicas para atendimento interno: escalar quando não encontrar, citar [Fonte: NOME, seção X.X], exceções antes da regra geral</span>
+      </li>
+      <li>
+        <span class="ev-icon pass">✓</span>
+        <span class="ev-text">FAQ-Atendimento classificado como <span class="icode">informal</span> com penalidade própria — reflete a distinção real entre política normativa e base de conhecimento informal da empresa</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Action plan -->
+  <div class="action-section">
+    <div class="action-header">O que fazer antes de entregar</div>
+
+    <div class="action-item">
+      <div class="action-rank">01</div>
+      <div class="action-body">
+        <div class="action-title">
+          Incluir evidências do Copilot no documento
+          <span class="tag tag-max">+2 pontos · D2: 1 → 3</span>
+        </div>
+        <div class="action-desc">
+          O commit <code>feat: adiciona evidências de uso do Copilot CLI</code> existe no repositório — se o arquivo não está aqui, copie-o agora. Se as evidências existem mas são superficiais (um único prompt, sem iteração visível), fortaleça: 3+ prompts com contexto real, ao menos uma iteração v1→v2 com análise crítica, um caso onde o Copilot errou e o que foi corrigido. Esta é a única ação que move o score total.
+        </div>
+      </div>
+    </div>
+
+    <div class="action-item">
+      <div class="action-rank">02</div>
+      <div class="action-body">
+        <div class="action-title">
+          Adicionar <code>requirements.txt</code>
+          <span class="tag tag-high">alto impacto · 5 min</span>
+        </div>
+        <div class="action-desc">
+          As versões já aparecem nos resultados: ChromaDB 0.5.23, sentence-transformers 3.3.1. Formalizar em <code>requirements.txt</code> torna o pipeline reproduzível e elimina qualquer dúvida sobre se o código "realmente roda". Cinco linhas. Um avaliador que tenta reproduzir e não consegue vai questionar D3.
+        </div>
+      </div>
+    </div>
+
+    <div class="action-item">
+      <div class="action-rank">03</div>
+      <div class="action-body">
+        <div class="action-title">
+          Adicionar script integrador
+          <span class="tag tag-mid">médio impacto · 15 min</span>
+        </div>
+        <div class="action-desc">
+          Um <code>main.py</code> ou <code>run_tests.py</code> que chame <code>ingest()</code> → <code>buscar(pergunta)</code> → <code>montar_prompt(pergunta, chunks)</code> fecha o loop end-to-end. Não precisa ser elaborado — 20 linhas provam que os módulos se integram e que o pipeline é executável como unidade.
+        </div>
+      </div>
+    </div>
+
+    <div class="action-item">
+      <div class="action-rank">04</div>
+      <div class="action-body">
+        <div class="action-title">
+          Incluir output real do terminal
+          <span class="tag tag-mid">médio impacto · 5 min</span>
+        </div>
+        <div class="action-desc">
+          Um bloco de saída com <code>"Ingestão concluída: 39 chunks"</code> e o resultado de uma busca com scores reais transforma números reportados em evidência verificável. Os scores já são específicos demais para serem inventados — um log do terminal os confirma definitivamente.
+        </div>
+      </div>
+    </div>
+
+    <div class="action-item">
+      <div class="action-rank">05</div>
+      <div class="action-body">
+        <div class="action-title">
+          Justificar numericamente os parâmetros de chunking
+          <span class="tag tag-low">baixo impacto · 5 min</span>
+        </div>
+        <div class="action-desc">
+          Os valores 400 palavras e 40 de overlap estão no <code>config.py</code> sem justificativa escrita. Uma linha no docstring de <code>ingestao.py</code> — como "400 palavras ≈ 520 tokens, dentro do orçamento estimado no Ex. 1.1" — conecta os exercícios da trilha e demonstra que o valor foi calculado, não arbitrado. Especialmente relevante porque o Exercício 1.1 exigia exatamente essa estimativa.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>
