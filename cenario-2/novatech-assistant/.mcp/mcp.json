@@ -1,0 +1,44 @@
+{
+  "mcpServers": {
+    "filesystem-code": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "./src",
+        "./specs",
+        "./skills",
+        "./docs/adr",
+        "./prompts",
+        "./tests"
+      ],
+      "description": "Leitura e escrita de código-fonte, specs SDD, skills do projeto, ADRs e prompts. Escopo mínimo: exclui docs de negócio (somente-leitura) e infra."
+    },
+    "filesystem-docs": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "./docs/novatech",
+        "./data/retrieval-corpus"
+      ],
+      "description": "SOMENTE-LEITURA (política): documentação de negócio da NovaTech e corpus de chunks RAG. Agentes NUNCA devem escrever nestas pastas."
+    },
+    "git": {
+      "command": "uvx",
+      "args": ["mcp-server-git", "--repository", "."],
+      "description": "Histórico, branches, diffs e status do repositório local."
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "description": "Grafo de conhecimento persistente. Armazena linguagem ubíqua do domínio NovaTech e decisões de projeto."
+    },
+    "everything": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-everything"],
+      "description": "Server de referência para explorar as primitivas MCP (tools, resources, prompts). Uso educacional — não aponta para arquivos do projeto. Permite ao time entender o protocolo antes de criar servers customizados."
+    }
+  }
+}
+
