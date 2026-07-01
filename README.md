@@ -14,7 +14,7 @@ A trilha cobre dez tópicos — de fundamentos de IA generativa a engenharia de 
 | :--- | :--- | :--- | :--- |
 | 1 | `cenario-1` | Fundamentos · Prompt · Contexto · RAG/MCP | 06/06/2026 |
 | 2 | `cenario-2` | MCP · SDD · AGENTS.md · Skills | 01/07/2026 |
-| 3 | `cenario-3` | _a definir_ | 27/06/2026 |
+| 3 | `cenario-3` | Harness Engineering · Structured Outputs · Revisão Crítica de IA | 01/07/2026 |
 
 A `main` permanece como vitrine: documentação, skills e índice dos cenários.
 
@@ -38,6 +38,11 @@ A `main` permanece como vitrine: documentação, skills e índice dos cenários.
 │   ├── exercicio-2.1/            — MCP servers (mapeamento, config, evidências, riscos)
 │   ├── exercicio-2.2/            — SDD: tasks.md + código + revisão crítica
 │   └── exercicio-2.3/            — estratégia de skills + SKILL.md Foundation
+├── cenario-3/                    — entregáveis do Cenário 3
+│   ├── material/                 — enunciados, gabaritos e simulado de certificação
+│   ├── novatech-assistant/       — módulos implementados (response-validator, feedback)
+│   ├── exercicio-3.1/            — structured output + guardrails determinísticos
+│   └── exercicio-3.2/            — revisão crítica de código gerado por IA
 └── .claude/
     └── skills/                   — skills locais que apoiam o trabalho
         ├── novatech-context/
