@@ -62,19 +62,36 @@ A DB1 foi contratada para construir um assistente de IA que responda em linguage
 
 ## Skills
 
-Três skills foram escritas para acompanhar o trabalho. Vivem em `.claude/skills/` e seguem com o repositório.
+Duas famílias de skills convivem neste repositório:
+
+### Skills de trabalho — `.claude/skills/`
+
+Escritas manualmente para guiar o processo ao longo da trilha.
 
 - **`novatech-context`** — carrega o cenário, a localização dos arquivos e o catálogo das armadilhas plantadas nos documentos.
 - **`rag-viability-analysis`** — estrutura a análise de viabilidade técnica de um projeto de RAG; usada no Exercício 1.1.
 - **`devils-advocate-review`** — crítica adversarial para fechar o ciclo v1 → v2 que todo exercício exige.
 
-Convivem com o repositório porque a trilha também ensina a tratá-las como artefato — não como ornamento.
+### Skills de domínio — `.agents/skills/`
+
+Geradas pela **Clovis CLI** (`author: clovis-cli`) a partir do contexto do projeto NovaTech. São skills de domínio e técnicas que agentes carregam sob demanda via `description` no frontmatter — sem índice manual.
+
+| Skill | Tipo | O que cobre |
+| :--- | :--- | :--- |
+| `query-assistant` | domain | Endpoint RAG (POST /api/query), context budget, grounding, source_document obrigatório |
+| `ingestion-pipeline` | domain | Extração de PDFs/DOCX/XLSX, chunking, embeddings, indexação no Azure AI Search, versionamento de documentos |
+| `feedback` | domain | Endpoint de feedback do atendente, feedback-card no Teams, métricas de qualidade |
+| `web-dashboard` | domain | Painel React interno com histórico de consultas e indicadores de qualidade |
+| `mcp-server-configuration` | technical | Mapeamento de necessidades → MCP servers locais com least privilege, `.mcp/mcp.json` |
+| `skill-authoring-hierarchy` | technical | Convenção Foundation → Domain → Artifact para organizar skills em `/skills/` |
+
+A Clovis também mantém `.clovis/cli-state.json` com o estado durável do projeto — contexto que persiste entre sessões sem depender de memória do modelo.
 
 ---
 
 ## Ferramentas
 
-Claude · Claude Code · GitHub Copilot. Sem dados de cliente em qualquer entregável.
+Claude · Claude Code · GitHub Copilot · **Clovis CLI**. Sem dados de cliente em qualquer entregável.
 
 ---
 
