@@ -1,0 +1,82 @@
+{
+  "workMode": "greenfield",
+  "discoveryAnswers": {
+    "systemType": "treinamento",
+    "scope": {
+      "type": "whole_project"
+    },
+    "businessInput": "as regras estao em .md dentro do projeto ... para diferentes cenarios",
+    "restrictions": [
+      "analisar o que foi feito e trazer insights e fazer o cenario 3 aqui no clovis , o 2 e 1 foi atra´ves do claude code, então pegue na memoria tamb´me , o 2.1 foi finalizado agora tamo fazendo o 2.2 , pegue contexto.."
+    ]
+  },
+  "domainIndex": [
+    {
+      "name": "Pipeline de Ingestão de Documentos",
+      "slug": "ingestion-pipeline",
+      "dependsOn": [],
+      "order": 0,
+      "documented": true,
+      "specified": false
+    },
+    {
+      "name": "Consulta do Assistente (RAG Query)",
+      "slug": "query-assistant",
+      "dependsOn": [
+        "ingestion-pipeline"
+      ],
+      "order": 1,
+      "documented": true,
+      "specified": false
+    },
+    {
+      "name": "Feedback de Respostas",
+      "slug": "feedback",
+      "dependsOn": [
+        "query-assistant"
+      ],
+      "order": 2,
+      "documented": true,
+      "specified": false
+    },
+    {
+      "name": "Integração com Microsoft Teams",
+      "slug": "teams-bot",
+      "dependsOn": [
+        "query-assistant",
+        "feedback"
+      ],
+      "order": 3,
+      "documented": false,
+      "specified": false
+    },
+    {
+      "name": "Painel Web de Métricas",
+      "slug": "web-dashboard",
+      "dependsOn": [
+        "query-assistant",
+        "feedback"
+      ],
+      "order": 4,
+      "documented": false,
+      "specified": false
+    }
+  ],
+  "technicalSkillIndex": [
+    {
+      "name": "Configuração de Servidores MCP",
+      "slug": "mcp-server-configuration",
+      "description": "Mapeamento de necessidades do time (código, docs de negócio, corpus RAG, histórico git, memória) para servers MCP locais com escopo de least privilege (filesystem-code, filesystem-docs somente-leitura, git, memory) e regras de segurança associadas. Carregar ao configurar ou revisar .mcp/mcp.json e a seção Coding Standards do AGENTS.md.",
+      "documented": true
+    },
+    {
+      "name": "Hierarquia de Skills (Foundation → Domain → Artifact)",
+      "slug": "skill-authoring-hierarchy",
+      "description": "Convenção de organização de skills reutilizáveis do projeto em 3 níveis — foundation (convenções gerais), domain (padrões por tecnologia/domínio) e artifact (templates de geração pontual). Carregar ao criar ou revisar novas skills técnicas ou de domínio no novatech-assistant.",
+      "documented": true
+    }
+  ],
+  "authoritativeDocsSource": {
+    "kind": "skills"
+  }
+}

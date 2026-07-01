@@ -13,7 +13,7 @@ A trilha cobre dez tópicos — de fundamentos de IA generativa a engenharia de 
 | Cenário | Branch | Tópicos | Entrega |
 | :--- | :--- | :--- | :--- |
 | 1 | `cenario-1` | Fundamentos · Prompt · Contexto · RAG/MCP | 06/06/2026 |
-| 2 | `cenario-2` | _a definir_ | 18/06/2026 |
+| 2 | `cenario-2` | MCP · SDD · AGENTS.md · Skills | 01/07/2026 |
 | 3 | `cenario-3` | _a definir_ | 27/06/2026 |
 
 A `main` permanece como vitrine: documentação, skills e índice dos cenários.
@@ -24,14 +24,22 @@ A `main` permanece como vitrine: documentação, skills e índice dos cenários.
 
 ```
 .
-├── README.md                   — este documento
-├── material-pratica-1/         — enunciados e anexos da Prática 1 (NovaTech)
-├── cenario-1/                  — entregáveis do Cenário 1
-│   ├── exercicio-1.1/          — análise técnica de viabilidade
-│   ├── exercicio-1.2/          — protótipo de system prompt
-│   └── exercicio-1.3/          — pipeline de RAG em Python
+├── README.md                     — este documento
+├── AGENTS.md                     — constitution do repositório (lido por agentes de IA)
+├── material-pratica-1/           — enunciados e anexos da Prática 1 (NovaTech)
+├── cenario-1/                    — entregáveis do Cenário 1
+│   ├── exercicio-1.1/            — análise técnica de viabilidade
+│   ├── exercicio-1.2/            — protótipo de system prompt
+│   └── exercicio-1.3/            — pipeline de RAG em Python
+├── cenario-2/                    — entregáveis do Cenário 2
+│   ├── material-pratica/         — enunciados e anexos da Prática 2
+│   ├── correcao-pratica/         — gabaritos de avaliação por papel
+│   ├── novatech-assistant/       — starter repo com modificações aplicadas
+│   ├── exercicio-2.1/            — MCP servers (mapeamento, config, evidências, riscos)
+│   ├── exercicio-2.2/            — SDD: tasks.md + código + revisão crítica
+│   └── exercicio-2.3/            — estratégia de skills + SKILL.md Foundation
 └── .claude/
-    └── skills/                 — skills locais que apoiam o trabalho
+    └── skills/                   — skills locais que apoiam o trabalho
         ├── novatech-context/
         ├── rag-viability-analysis/
         └── devils-advocate-review/
