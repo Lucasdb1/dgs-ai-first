@@ -4,6 +4,7 @@
 > **Tópico:** Revisão Crítica de Outputs de IA
 > **Código revisado:** `feedback-handler.ts` gerado pelo Copilot
 > **Código corrigido:** `novatech-assistant/src/functions/feedback/handler.ts`
+> **AGENTS.md:** construído no Cenário 2 pelo time — fonte de verdade das regras de código
 
 ---
 

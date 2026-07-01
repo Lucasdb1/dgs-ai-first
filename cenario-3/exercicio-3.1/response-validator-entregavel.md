@@ -6,9 +6,20 @@
 
 ---
 
+## Conexão com Cenários 1 e 2
+
+Este exercício amarra artefatos produzidos nos cenários anteriores:
+
+- **Guardrails (origem: Cenário 2 — Product Specialist):** Os 2 guardrails implementados aqui foram formalizados pelo PS no Cenário 2 como regras DEVE/NÃO DEVE. Este módulo os transforma de linguagem natural em código que *bloqueia de verdade* — fechando o gap entre intenção de produto e garantia técnica.
+- **POL-001-B (origem: Cenário 1 — corpus NovaTech):** A regra do Guardrail 2 vem diretamente de POL-001 §3.2 — cargas ANTT classes 1–6 não são elegíveis para devolução padrão. O chunk POL-001-B foi recuperado no pipeline RAG do Cenário 1; agora o mesmo conteúdo alimenta uma verificação determinística.
+- **ADR-0002 — Context Budget:** A ADR-0002 define que o context window tem limite fixo. Sob alta pressão de contexto (janela cheia), o modelo tem maior chance de ignorar instruções do system prompt. O `response-validator.ts` garante que mesmo nesse cenário degradado os guardrails continuam ativos — porque rodam fora do modelo.
+- **AGENTS.md (origem: Cenário 2):** O código segue integralmente as regras do AGENTS.md: `strict: true`, pino, imports ESM, sem `as any`, config via `shared/config`.
+
+---
+
 ## Contexto: probabilístico vs determinístico
 
-O prompt instrui o modelo a incluir a fonte e a negar devoluções de carga perigosa. Mas o prompt é **probabilístico** — o modelo pode ignorá-lo, reformular, ou alucinar com alta pressão de contexto.
+O prompt instrui o modelo a incluir a fonte e a negar devoluções de carga perigosa. Mas o prompt é **probabilístico** — o modelo pode ignorá-lo, reformular, ou alucinar com alta pressão de contexto (ver ADR-0002).
 
 O `response-validator.ts` é **determinístico**: se a condição não for satisfeita, a resposta é bloqueada — sem exceção, sem depender da "vontade" do modelo.
 
