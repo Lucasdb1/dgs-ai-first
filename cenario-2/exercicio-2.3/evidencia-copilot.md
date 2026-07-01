@@ -45,10 +45,55 @@ Path destino: skills/foundation/typescript-conventions.md
 
 ## Teste: Copilot gera código melhor com a skill presente?
 
-O SKILL.md foi adicionado ao repositório e o Copilot foi usado para gerar um service de exemplo (`src/services/search.ts`). Comparação:
+O SKILL.md foi adicionado ao repositório e o Copilot foi usado para gerar `src/services/search.ts`.
 
-**Sem skill:** Copilot gerou `const result = response as any` e `console.log("chunks:", chunks)`
+### Sem skill (v1 — output bruto do Copilot)
 
-**Com skill:** Copilot gerou type guard `isSearchResult(value: unknown): value is SearchResult` e `log.info({ chunkCount }, "busca concluída")` usando o logger de `shared/logger`
+```typescript
+// v1: Copilot sem skill ativa
+async function searchChunks(embedding: number[]) {
+  const response = await client.search("*", { vector: { value: embedding } });
+  const result = response as any;           // ← R2 violada
+  console.log("chunks:", result.results);   // ← R3 violada
+  return result.results;                    // ← R1 violada: sem tipo de retorno
+}
+```
 
-Melhoria confirmada nas regras R2 (as any → type guard) e R3 (console.log → pino). Regras R4/R5/R6/R7 precisam de mais testes em tasks futuras.
+### Com skill (v2 — `typescript-conventions.md` no repo)
+
+```typescript
+// v2: Copilot com skill ativa — arquivo completo em novatech-assistant/src/services/search.ts
+export async function searchChunks(
+  embedding: number[],
+  topK: number = 5,
+): Promise<SearchChunk[]> {                             // ← R1: tipo explícito
+  log.info({ embeddingDim: embedding.length, topK },    // ← R3: pino
+    "iniciando busca vetorial");
+
+  // ...
+
+  for await (const result of results.results) {
+    if (!isAzureSearchDocument(result.document)) {      // ← R2: type guard
+      log.warn({ raw: result.document },
+        "documento com formato inesperado ignorado");
+      continue;
+    }
+    chunks.push({ /* ... */ });
+  }
+  return chunks;
+}
+```
+
+### Comparação por regra
+
+| Regra | v1 (sem skill) | v2 (com skill) | Melhoria |
+|---|---|---|---|
+| R1 — tipos explícitos | `async function searchChunks(embedding)` sem retorno | `Promise<SearchChunk[]>` explícito | ✅ |
+| R2 — proibido `as any` | `response as any` | type guard `isAzureSearchDocument()` | ✅ |
+| R3 — logger pino | `console.log("chunks:", ...)` | `log.info({ chunkCount }, "...")` | ✅ |
+| R7 — config centralizado | `process.env.AZURE_SEARCH_KEY!` direto | importado de `../shared/config` | ✅ |
+| R4 — ESM imports | correto na v1 | correto | — |
+| R5 — named exports | correto na v1 | correto | — |
+
+Regras R4/R5 o Copilot já acertou na v1 (contexto ESM era claro pelo `package.json`).
+As demais (R1, R2, R3, R7) só apareceram corretamente **depois** que a skill estava no repositório.
