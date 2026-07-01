@@ -1,14 +1,17 @@
 # Exercício 2.1 — Evidência: Agente recuperando chunk do corpus RAG
 
-> **Tipo de evidência:** Chamada real ao `filesystem-docs` MCP server
-> **Arquivo:** `data/retrieval-corpus/chunks-novatech.md`
+> **Tipo de evidência:** Chamadas reais ao `filesystem-docs` MCP server (JSON-RPC/stdio)
+> **Pergunta simulada:** *"Qual o prazo de devolução de carga perigosa?"*
+> **Gabarito Anexo B:** chunks esperados = `POL-001-A` + `POL-001-B`
 > **Data:** 2026-06-30
 
 ---
 
 ## Contexto
 
-O `filesystem-docs` server expõe `./data/retrieval-corpus/` para que o agente possa simular o comportamento do Azure AI Search durante desenvolvimento local. Em vez de requisições pagas ao Azure, o agente lê os chunks diretamente do arquivo semeado com os dados do Anexo B.
+O `filesystem-docs` server expõe `./data/retrieval-corpus/` para que o agente simule o Azure AI Search localmente. O agente lê o corpus, identifica os chunks relevantes para a pergunta e os apresenta como contexto — sem custo de API.
+
+A pergunta *"Qual o prazo de devolução de carga perigosa?"* é o caso de teste mais crítico do domínio NovaTech: o chunk `POL-001-A` diz "7 dias úteis" (regra geral), mas o chunk `POL-001-B` diz que **carga perigosa NÃO é elegível para devolução padrão**. Um assistente que retorna apenas `POL-001-A` está alucinando por omissão.
 
 ---
 
@@ -22,14 +25,12 @@ Secure MCP Filesystem Server running on stdio
 
 ---
 
-## Chamada — Ler corpus de chunks
+## Chamada 1 — Agente lê o corpus para identificar chunks relevantes
 
-**Request:**
+**Request (JSON-RPC via stdio):**
 ```json
 {
-  "jsonrpc": "2.0",
-  "id": 4,
-  "method": "tools/call",
+  "jsonrpc": "2.0", "id": 10, "method": "tools/call",
   "params": {
     "name": "read_file",
     "arguments": { "path": "./data/retrieval-corpus/chunks-novatech.md" }
@@ -37,35 +38,71 @@ Secure MCP Filesystem Server running on stdio
 }
 ```
 
-**Resposta (trecho inicial):**
+**Chunks retornados (seção POL-001 — relevante para a pergunta):**
 ```
-# Anexo B — Chunks de Referência do Pipeline de RAG
+Chunk POL-001-A — Seção 3.1: Prazo geral
+> O cliente pode solicitar a devolução de mercadorias em até 7 (sete) dias úteis após a
+> data de recebimento confirmada no sistema de tracking. A contagem de dias úteis exclui
+> sábados, domingos e feriados nacionais.
 
-> **Nota para o participante:** Os chunks abaixo simulam o resultado do pipeline de RAG após
-> processar a documentação da NovaTech (Anexo A). Eles representam os trechos que o Azure AI
-> Search retornaria ao buscar por similaridade com a pergunta do atendente. Use estes chunks
-> quando os exercícios pedirem simulação de respostas ou teste de prompts.
+Chunk POL-001-B — Seção 3.2: Exceções
+> As seguintes categorias de carga NÃO são elegíveis para devolução pelo processo padrão:
+> Cargas perigosas classificadas nas classes 1 a 6 da ANTT (Agência Nacional de Transportes
+> Terrestres), conforme Resolução ANTT nº 5.947/2021. Inclui: explosivos (classe 1),
+> gases (classe 2), líquidos inflamáveis (classe 3), sólidos inflamáveis (classe 4),
+> oxidantes e peróxidos (classe 5), substâncias tóxicas e infectantes (classe 6).
+> Para essas categorias, o cliente deve entrar em contato com o setor de Gestão de Riscos
+> (ramal 4500) para tratamento individual.
 
-## Como usar este anexo
-
-Quando um exercício pedir que você teste o assistente, simule o comportamento do pipeline:
-1. Leia a pergunta do atendente.
-2. Identifique quais chunks seriam recuperados por similaridade semântica (tipicamente os 3-5 mais relevantes).
-3. Esses chunks são o contexto que o LLM recebe para gerar a resposta.
-
-O assistente **só deveria usar informação presente nos chunks** — qualquer dado gerado além
-do conteúdo dos chunks é alucinação.
+Chunk POL-001-C — Seção 3.3: Procedimento
+> O cliente abre chamado no Portal do Cliente (portal.novatech.com.br)...
 ```
+
+**Análise de cobertura (gabarito Anexo B):**
+
+| Chunk | Presente? | Relevância para a pergunta |
+|---|---|---|
+| `POL-001-A` | ✅ | Regra geral (7 dias) — necessário mas insuficiente |
+| `POL-001-B` | ✅ | **Crítico** — exceção de carga perigosa; sem este chunk o assistente alucina |
+| `POL-001-C` | presente | Procedimento — baixa relevância para esta pergunta |
 
 ---
 
-## Mapa de cobertura — pergunta → chunks (Anexo B)
+## Chamada 2 — Validação cruzada no documento fonte (`docs/novatech/`)
 
-| Pergunta do atendente | Chunks esperados | Armadilha |
-|---|---|---|
-| "Qual o prazo de devolução?" | POL-001-A, POL-001-B | POL-001-B: carga perigosa NÃO pode ser devolvida |
-| "Como calcular frete especial?" | PROC-042-A, PROC-042-v2-A | Duas versões com multiplicadores diferentes — devo priorizar v2 |
-| "Qual o SLA do cliente Gold?" | SLA-2024-A | Confirmar: só existem Gold, Silver, Standard |
-| "O que é frete especial?" | PROC-042-A ou PROC-042-v2-A, FAQ-A | FAQ pode contradizer PROC — menor prioridade |
+O agente faz validação cruzada lendo o documento de origem para confirmar que o chunk `POL-001-B` reflete fielmente a seção 3.2 do POL-001.
 
-**Relevância:** O agente usa este corpus para testes locais **gratuitos**, sem consumir tokens do Azure AI Search. Coerente com a ADR-0002 (cenário 1): context budget de ~8K para chunks.
+**Request:**
+```json
+{
+  "jsonrpc": "2.0", "id": 11, "method": "tools/call",
+  "params": {
+    "name": "read_file",
+    "arguments": { "path": "./docs/novatech/POL-001-politica-devolucao.md" }
+  }
+}
+```
+
+**Resposta (seção 3.2 do documento fonte):**
+```
+3.2. Exceções ao prazo geral
+
+As seguintes categorias de carga NÃO são elegíveis para devolução pelo processo padrão:
+
+- Cargas perigosas classificadas nas classes 1 a 6 da ANTT (Agência Nacional de Transportes
+  Terrestres), conforme Resolução ANTT nº 5.947/2021. Inclui: explosivos (classe 1),
+  gases (classe 2), líquidos inflamáveis (classe 3), sólidos inflamáveis (classe 4),
+  oxidantes e peróxidos (classe 5), substâncias tóxicas e infectantes (classe 6).
+- Cargas refrigeradas que tenham rompido a cadeia de frio (temperatura fora da faixa
+  especificada na nota fiscal por mais de 30 minutos contínuos).
+```
+
+**Resultado da validação:** chunk `POL-001-B` é fiel ao documento fonte ✅
+
+---
+
+## Resposta correta do assistente (baseada nos chunks)
+
+> *"Cargas perigosas (classes 1-6 da ANTT) não são elegíveis para devolução pelo processo padrão — a regra geral de 7 dias úteis não se aplica. Para tratamento individual, entre em contato com o setor de Gestão de Riscos (ramal 4500). Fonte: POL-001, seção 3.2."*
+
+Se o agente retornar apenas "7 dias úteis" sem mencionar a exceção, é uma alucinação por omissão — `POL-001-B` estava disponível no corpus e foi ignorado.
